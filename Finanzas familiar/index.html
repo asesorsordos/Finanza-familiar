@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#059669">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="HogarBalance">
+    <title>Finanzas Familiares | Método 50-25-15-5-5</title>
+    <link id="pwa-manifest" rel="manifest" href="">
+    <link id="pwa-apple-icon" rel="apple-touch-icon" href="">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Notificación Toast Flotante -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform transition-all duration-300 translate-y-20 opacity-0 pointer-events-none">
+        <div class="bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 text-sm font-medium">
+            <span class="text-emerald-400 text-lg">✔</span>
+            <span id="toast-msg">Operación exitosa</span>
+        </div>
+    </div>
+
+    <!-- Modal de Instalación como App (PWA) -->
+    <div id="install-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl transform transition-all space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center text-2xl shadow-md">
+                    📲
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900">Instalar HogarBalance</h3>
+                    <p class="text-xs text-slate-500">Úsala como app nativa en tu celular o PC</p>
+                </div>
+            </div>
+
+            <div id="install-native-box" class="hidden bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-center space-y-3">
+                <p class="text-xs text-emerald-800 font-medium">Tu navegador permite instalar la aplicación directamente con un clic:</p>
+                <button type="button" onclick="triggerNativeInstall()" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition shadow-sm">
+                    ⚡ Instalar ahora en mi dispositivo
+                </button>
+            </div>
+
+            <div class="space-y-2.5 text-xs text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-200/70">
+                <p class="font-bold text-slate-800">📱 En Android (Chrome):</p>
+                <p>1. Toca el menú de <strong>3 puntos (⋮)</strong> arriba a la derecha.</p>
+                <p>2. Selecciona <strong>"Instalar aplicación"</strong> o <strong>"Añadir a pantalla de inicio"</strong>.</p>
+                
+                <div class="border-t border-slate-200 my-2 pt-2"></div>
+                
+                <p class="font-bold text-slate-800">🍎 En iPhone / iPad (Safari):</p>
+                <p>1. Toca el botón <strong>Compartir (⬆️)</strong> en la barra inferior.</p>
+                <p>2. Desliza y toca <strong>"Agregar a inicio"</strong>.</p>
+
+                <div class="border-t border-slate-200 my-2 pt-2"></div>
+
+                <p class="font-bold text-slate-800">💻 En Computador (Chrome / Edge):</p>
+                <p>Haz clic en el icono de <strong>Instalar (⊕)</strong> en la barra de direcciones arriba a la derecha.</p>
+            </div>
+
+            <div class="flex gap-2 pt-1">
+                <button type="button" onclick="downloadStandaloneHTML()" class="flex-1 py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition">
+                    ⬇️ Descargar archivo .HTML
+                </button>
+                <button type="button" onclick="closeInstallModal()" class="flex-1 py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Sincronización Familiar en Tiempo Real -->
+    <div id="sync-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl transform transition-all space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center text-2xl shadow-sm">
+                        ☁️
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Hogar Sincronizado</h3>
+                        <p id="sync-status-text" class="text-xs font-medium text-emerald-600">Conectando a la nube...</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeSyncModal()" class="p-2 text-slate-400 hover:text-slate-600 font-bold">✕</button>
+            </div>
+
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-2">
+                <label class="block text-xs font-bold text-slate-700">1. Tu Código de Hogar Actual</label>
+                <p class="text-[11px] text-slate-500">Comparte este código con tu pareja o familiares para que vean y editen el mismo presupuesto en tiempo real:</p>
+                <div class="flex gap-2 pt-1">
+                    <input type="text" id="current-household-code" readonly
+                        class="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-800 select-all focus:outline-none">
+                    <button type="button" onclick="copyHouseholdCode()" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition shrink-0">
+                        📋 Copiar
+                    </button>
+                </div>
+            </div>
+
+            <form id="join-household-form" class="bg-sky-50/60 p-4 rounded-2xl border border-sky-200/80 space-y-2.5">
+                <label class="block text-xs font-bold text-sky-900">2. Unirse a otro Hogar Familiar</label>
+                <p class="text-[11px] text-sky-700">Si otro familiar ya creó un hogar, pega su código aquí para sincronizar este celular con el suyo:</p>
+                <div class="flex gap-2">
+                    <input type="text" id="join-household-input" placeholder="Ej. HOGAR-4829" required
+                        class="flex-1 px-3 py-2 bg-white border border-sky-200 rounded-xl text-xs font-mono font-bold uppercase focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl transition shrink-0">
+                        Conectar
+                    </button>
+                </div>
+            </form>
+
+            <div class="flex justify-between items-center pt-1 text-[11px] text-slate-400">
+                <span>ID Dispositivo: <span id="device-uid-label" class="font-mono">...</span></span>
+                <button type="button" onclick="createNewHouseholdCode()" class="text-sky-600 hover:underline font-semibold">
+                    Generar código nuevo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación Personalizado -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl transform transition-all">
+            <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-4 text-xl font-bold">
+                !
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">¿Reiniciar datos del mes?</h3>
+            <p class="text-sm text-slate-500 mb-6">Esta acción borrará todos los ingresos, movimientos y cuentas pendientes actuales. No se puede deshacer.</p>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeConfirmModal()" class="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 transition">Cancelar</button>
+                <button type="button" onclick="confirmReset()" class="flex-1 py-2.5 px-4 rounded-xl bg-rose-600 text-white font-medium hover:bg-rose-700 transition shadow-sm">Sí, reiniciar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Abono / Cobro o Pago Parcial -->
+    <div id="partial-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl transform transition-all">
+            <div id="partial-modal-icon" class="w-12 h-12 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center mb-4 text-xl font-bold">
+                💵
+            </div>
+            <h3 id="partial-modal-title" class="text-lg font-bold text-slate-900 mb-1">Registrar Abono</h3>
+            <p id="partial-modal-subtitle" class="text-xs text-slate-500 mb-4">Saldo pendiente: $0</p>
+            
+            <form id="partial-form" class="space-y-4">
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="text-xs font-semibold text-slate-600">Monto a abonar</label>
+                        <button type="button" onclick="fillFullPartialAmount()" class="text-[11px] font-bold text-emerald-600 hover:underline">
+                            Liquidar todo el saldo
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <span class="absolute left-3.5 top-2.5 text-slate-400 font-semibold">$</span>
+                        <input type="number" id="partial-amount-input" min="0.01" step="any" required
+                            class="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+                <div id="partial-destination-wrapper" class="hidden">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Destino del dinero cobrado</label>
+                    <select id="partial-destination-select" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                        <option value="income">💵 Ingreso General (Repartir 50/25/15/5/5)</option>
+                        <option value="necesidades">🔵 Reintegrar a 50% Necesidades</option>
+                        <option value="deseos">🟣 Reintegrar a 25% Deseos</option>
+                        <option value="ahorro">🟢 Reintegrar a 15% Ahorro / Inv.</option>
+                        <option value="emergencia">🟡 Reintegrar a 5% Emergencias</option>
+                        <option value="regalos">🩷 Reintegrar a 5% Ayudas / Regalos</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 pt-1">
+                    <button type="button" onclick="closePartialModal()" class="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 font-medium text-sm hover:bg-slate-50 transition">Cancelar</button>
+                    <button type="submit" id="partial-submit-btn" class="flex-1 py-2.5 px-4 rounded-xl bg-teal-600 text-white font-semibold text-sm hover:bg-teal-700 transition shadow-sm">Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Barra Superior -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 font-bold text-lg">
+                    🏠
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-900 text-lg leading-tight">HogarBalance</h1>
+                    <p class="text-xs text-slate-500 font-medium">Método 50 · 25 · 15 · 5 · 5</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-1.5 sm:gap-2">
+                <button type="button" id="sync-header-btn" onclick="openSyncModal()" class="text-xs sm:text-sm py-2 px-3 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200/70 font-semibold transition flex items-center gap-1.5" title="Sincronizar familia en tiempo real">
+                    <span id="sync-dot" class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+                    <span>☁️</span>
+                    <span id="sync-btn-label" class="hidden sm:inline">Sincronizar</span>
+                </button>
+                <button type="button" onclick="openInstallModal()" class="text-xs sm:text-sm py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition shadow-sm flex items-center gap-1.5" title="Instalar como App en celular o PC">
+                    <span>📲</span>
+                    <span class="hidden md:inline">Instalar App</span>
+                </button>
+                <button type="button" onclick="exportBackup()" class="text-xs sm:text-sm py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition flex items-center gap-1" title="Guardar copia de seguridad">
+                    <span>💾</span>
+                    <span class="hidden lg:inline">Respaldo</span>
+                </button>
+                <label class="text-xs sm:text-sm py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition flex items-center gap-1 cursor-pointer" title="Restaurar copia de seguridad">
+                    <span>📂</span>
+                    <span class="hidden lg:inline">Cargar</span>
+                    <input type="file" id="import-backup-input" accept=".json" class="hidden" onchange="importBackup(event)">
+                </label>
+                <button type="button" onclick="loadDemoData()" class="text-xs sm:text-sm py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition flex items-center gap-1" title="Cargar datos de ejemplo">
+                    <span>✨</span>
+                    <span class="hidden md:inline">Demo</span>
+                </button>
+                <button type="button" onclick="openConfirmModal()" class="text-xs sm:text-sm py-2 px-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-medium transition flex items-center gap-1" title="Reiniciar mes">
+                    <span>🗑️</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+
+        <!-- Tarjeta Superior: Resumen de Ingresos Familiares -->
+        <section class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                <div class="lg:col-span-5 space-y-1">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 mb-1">
+                        👨‍👩‍👧‍👦 Presupuesto Familiar Mensual
+                    </span>
+                    <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight" id="total-income-display">$0</h2>
+                    <p class="text-sm text-slate-500">Disponible tras gastos: <strong id="remaining-balance-display" class="text-slate-800">$0</strong></p>
+                </div>
+
+                <!-- Formulario rápido para agregar ingreso -->
+                <form id="income-form" class="lg:col-span-7 bg-slate-50 p-4 rounded-2xl border border-slate-200/60 flex flex-col sm:flex-row gap-3">
+                    <div class="flex-1">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Fuente / Integrante</label>
+                        <input type="text" id="income-source" placeholder="Ej. Salario Mamá, Bono..." required
+                            class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div class="sm:w-44">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Monto Ingreso</label>
+                        <input type="number" id="income-amount" placeholder="0" min="1" step="any" required
+                            class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div class="sm:self-end">
+                        <button type="submit" class="w-full sm:w-auto py-2.5 px-5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm rounded-xl transition shadow-sm flex items-center justify-center gap-1.5">
+                            <span>+</span> Ingreso
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Lista compacta de ingresos activos -->
+            <div id="income-pills" class="mt-4 pt-4 border-t border-slate-100 flex flex-wrap gap-2 hidden"></div>
+        </section>
+
+        <!-- Cuadrícula de las 5 Categorías (50 - 25 - 15 - 5 - 5) -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            
+            <!-- 50% Necesidades -->
+            <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200/80 flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-blue-500"></div>
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
+                                🏡
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-900">Necesidades</h3>
+                                <span class="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">Meta: 50%</span>
+                            </div>
+                        </div>
+                        <span id="pct-necesidades" class="text-sm font-bold text-slate-700">0%</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-4">Vivienda, mercado, servicios, salud, educación, transporte básico.</p>
+                </div>
+                
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs font-medium">
+                        <span class="text-slate-500">Gastado: <strong id="spent-necesidades" class="text-slate-900">$0</strong></span>
+                        <span class="text-slate-500">Tope: <strong id="budget-necesidades" class="text-blue-600">$0</strong></span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div id="bar-necesidades" class="bg-blue-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p id="status-necesidades" class="text-[11px] font-medium text-slate-400 text-right">Sin movimientos</p>
+                </div>
+            </div>
+
+            <!-- 25% Deseos / Estilo de Vida -->
+            <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200/80 flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-purple-500"></div>
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg">
+                                🎉
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-900">Deseos</h3>
+                                <span class="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md">Meta: 25%</span>
+                            </div>
+                        </div>
+                        <span id="pct-deseos" class="text-sm font-bold text-slate-700">0%</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-4">Salidas a comer, entretenimiento, suscripciones, ropa, vacaciones.</p>
+                </div>
+                
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs font-medium">
+                        <span class="text-slate-500">Gastado: <strong id="spent-deseos" class="text-slate-900">$0</strong></span>
+                        <span class="text-slate-500">Tope: <strong id="budget-deseos" class="text-purple-600">$0</strong></span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div id="bar-deseos" class="bg-purple-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p id="status-deseos" class="text-[11px] font-medium text-slate-400 text-right">Sin movimientos</p>
+                </div>
+            </div>
+
+            <!-- 15% Ahorro e Inversión -->
+            <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200/80 flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-emerald-500"></div>
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+                                💰
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-900">Ahorro / Inv.</h3>
+                                <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">Meta: 15%</span>
+                            </div>
+                        </div>
+                        <span id="pct-ahorro" class="text-sm font-bold text-slate-700">0%</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-4">Metas familiares a futuro, vivienda propia, inversiones, retiro.</p>
+                </div>
+                
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs font-medium">
+                        <span class="text-slate-500">Aportado: <strong id="spent-ahorro" class="text-slate-900">$0</strong></span>
+                        <span class="text-slate-500">Meta: <strong id="budget-ahorro" class="text-emerald-600">$0</strong></span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div id="bar-ahorro" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p id="status-ahorro" class="text-[11px] font-medium text-slate-400 text-right">Sin movimientos</p>
+                </div>
+            </div>
+
+            <!-- 5% Fondo de Emergencia / Imprevistos -->
+            <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200/80 flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-amber-500"></div>
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg">
+                                🛡️
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-900">Emergencias</h3>
+                                <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">Meta: 5%</span>
+                            </div>
+                        </div>
+                        <span id="pct-emergencia" class="text-sm font-bold text-slate-700">0%</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-4">Colchón de seguridad ante imprevistos médicos, reparaciones o urgencias.</p>
+                </div>
+                
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs font-medium">
+                        <span class="text-slate-500">Reservado: <strong id="spent-emergencia" class="text-slate-900">$0</strong></span>
+                        <span class="text-slate-500">Meta: <strong id="budget-emergencia" class="text-amber-600">$0</strong></span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div id="bar-emergencia" class="bg-amber-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p id="status-emergencia" class="text-[11px] font-medium text-slate-400 text-right">Sin movimientos</p>
+                </div>
+            </div>
+
+            <!-- 5% Ayudas / Regalos / Donaciones -->
+            <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200/80 flex flex-col justify-between relative overflow-hidden sm:col-span-2 lg:col-span-1">
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-rose-500"></div>
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg">
+                                🤝
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-900">Ayudas / Regalos</h3>
+                                <span class="text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">Meta: 5%</span>
+                            </div>
+                        </div>
+                        <span id="pct-regalos" class="text-sm font-bold text-slate-700">0%</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-4">Apoyo a familiares, donaciones, ofrendas, cumpleaños y detalles solidarios.</p>
+                </div>
+                
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs font-medium">
+                        <span class="text-slate-500">Destinado: <strong id="spent-regalos" class="text-slate-900">$0</strong></span>
+                        <span class="text-slate-500">Tope: <strong id="budget-regalos" class="text-rose-600">$0</strong></span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div id="bar-regalos" class="bg-rose-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p id="status-regalos" class="text-[11px] font-medium text-slate-400 text-right">Sin movimientos</p>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Sección de Cuentas por Cobrar y Cuentas por Pagar -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Cuentas por Cobrar -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-10 h-10 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center text-lg">
+                            📥
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-base">Cuentas por Cobrar</h3>
+                            <p class="text-xs text-slate-500">Dinero prestado o pagos pendientes por recibir</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Pendiente</span>
+                        <strong id="total-receivable" class="text-base font-bold text-teal-600">$0</strong>
+                    </div>
+                </div>
+
+                <!-- Formulario rápido CxC -->
+                <form id="receivable-form" class="grid grid-cols-1 sm:grid-cols-12 gap-2 mb-4 bg-slate-50 p-3 rounded-2xl border border-slate-200/60">
+                    <input type="text" id="rec-person" placeholder="¿Quién debe? (Ej. Préstamo Juan)" required
+                        class="sm:col-span-5 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <input type="date" id="rec-date" title="Fecha estimada de cobro"
+                        class="sm:col-span-3 px-2.5 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <input type="number" id="rec-amount" placeholder="Monto" min="1" step="any" required
+                        class="sm:col-span-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <button type="submit" class="sm:col-span-2 py-2 px-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1">
+                        + Agregar
+                    </button>
+                </form>
+
+                <!-- Lista CxC -->
+                <div id="receivables-list" class="space-y-2 max-h-60 overflow-y-auto pr-1 flex-1"></div>
+            </div>
+
+            <!-- Cuentas por Pagar -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-10 h-10 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center text-lg">
+                            📤
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-base">Cuentas por Pagar</h3>
+                            <p class="text-xs text-slate-500">Facturas, cuotas o compromisos próximos</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Pendiente</span>
+                        <strong id="total-payable" class="text-base font-bold text-orange-600">$0</strong>
+                    </div>
+                </div>
+
+                <!-- Formulario rápido CxP -->
+                <form id="payable-form" class="grid grid-cols-1 sm:grid-cols-12 gap-2 mb-4 bg-slate-50 p-3 rounded-2xl border border-slate-200/60">
+                    <input type="text" id="pay-desc" placeholder="Concepto (Ej. Recibo Luz, Tarjeta)" required
+                        class="sm:col-span-4 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    <select id="pay-category" class="sm:col-span-3 px-2 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <option value="necesidades">50% Necesidad</option>
+                        <option value="deseos">25% Deseo</option>
+                        <option value="ahorro">15% Ahorro</option>
+                        <option value="emergencia">5% Emergencia</option>
+                        <option value="regalos">5% Ayuda/Regalo</option>
+                    </select>
+                    <input type="date" id="pay-date" title="Fecha límite de pago"
+                        class="sm:col-span-3 px-2 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    <div class="sm:col-span-2 flex gap-1">
+                        <input type="number" id="pay-amount" placeholder="$" min="1" step="any" required
+                            class="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    </div>
+                    <button type="submit" class="sm:col-span-12 py-2 px-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1.5">
+                        + Programar Cuenta por Pagar
+                    </button>
+                </form>
+
+                <!-- Lista CxP -->
+                <div id="payables-list" class="space-y-2 max-h-60 overflow-y-auto pr-1 flex-1"></div>
+            </div>
+
+        </section>
+
+        <!-- Sección Inferior: Registro de Gastos/Aportes + Gráfico Comparativo + Historial -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Columna Izquierda: Formulario de Movimiento y Gráfico -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <!-- Formulario de Nuevo Movimiento -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80">
+                    <h3 class="font-bold text-slate-900 text-lg mb-4 flex items-center gap-2">
+                        <span>🧾</span> Registrar Movimiento
+                    </h3>
+                    <form id="expense-form" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Categoría del Método</label>
+                            <select id="exp-category" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <option value="necesidades">🔵 50% - Necesidades Básicas</option>
+                                <option value="deseos">🟣 25% - Deseos / Estilo de Vida</option>
+                                <option value="ahorro">🟢 15% - Ahorro e Inversión</option>
+                                <option value="emergencia">🟡 5% - Fondo de Emergencia</option>
+                                <option value="regalos">🩷 5% - Ayudas / Regalos / Donaciones</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Concepto</label>
+                                <input type="text" id="exp-desc" placeholder="Ej. Supermercado, Cine..." required
+                                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Integrante</label>
+                                <select id="exp-member" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <option value="Hogar (Común)">🏠 Hogar (Común)</option>
+                                    <option value="Papá">👨 Papá</option>
+                                    <option value="Mamá">👩 Mamá</option>
+                                    <option value="Hijos">🧒 Hijos</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Monto</label>
+                            <div class="relative">
+                                <span class="absolute left-3.5 top-2.5 text-slate-400 font-semibold">$</span>
+                                <input type="number" id="exp-amount" placeholder="0" min="1" step="any" required
+                                    class="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm rounded-xl transition shadow-md flex items-center justify-center gap-2">
+                            <span>+</span> Agregar al Presupuesto
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Gráfico Visual Nativo -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80">
+                    <div class="flex items-center justify-between mb-1">
+                        <h3 class="font-bold text-slate-900 text-base">Distribución Real vs Ideal</h3>
+                        <div class="flex items-center gap-3 text-[11px] font-medium text-slate-500">
+                            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-slate-800 inline-block"></span> Real</span>
+                            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-slate-300 inline-block"></span> Ideal</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-5">Comparativa visual de tus asignaciones familiares</p>
+                    <div id="native-chart-container" class="space-y-3.5"></div>
+                </div>
+
+            </div>
+
+            <!-- Columna Derecha: Historial de Movimientos Familiares -->
+            <div class="lg:col-span-7 bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 flex flex-col">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-lg">Movimientos del Mes</h3>
+                        <p class="text-xs text-slate-500">Detalle de gastos y aportes realizados por la familia</p>
+                    </div>
+                    
+                    <!-- Filtro rápido -->
+                    <select id="filter-category" onchange="renderUI()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none">
+                        <option value="all">Todas las categorías</option>
+                        <option value="necesidades">50% Necesidades</option>
+                        <option value="deseos">25% Deseos</option>
+                        <option value="ahorro">15% Ahorro / Inv.</option>
+                        <option value="emergencia">5% Emergencias</option>
+                        <option value="regalos">5% Ayudas / Regalos</option>
+                    </select>
+                </div>
+
+                <!-- Lista de transacciones -->
+                <div id="transactions-list" class="flex-1 space-y-2.5 overflow-y-auto max-h-[540px] pr-1"></div>
+            </div>
+
+        </section>
+    </main>
+
+    <script>
+        // Estado de la aplicación guardado en localStorage
+        let appState = {
+            incomes: [],
+            transactions: [],
+            receivables: [],
+            payables: []
+        };
+
+        // Configuración de categorías del método 50-25-15-5-5
+        const CATEGORIES = {
+            necesidades: { name: 'Necesidades',    pct: 0.50, barClass: 'bg-blue-500',    badgeBg: 'bg-blue-50',    badgeText: 'text-blue-700',    emoji: '🏡', isSaving: false },
+            deseos:      { name: 'Deseos',         pct: 0.25, barClass: 'bg-purple-500',  badgeBg: 'bg-purple-50',  badgeText: 'text-purple-700',  emoji: '🎉', isSaving: false },
+            ahorro:      { name: 'Ahorro/Inv.',    pct: 0.15, barClass: 'bg-emerald-500', badgeBg: 'bg-emerald-50', badgeText: 'text-emerald-700', emoji: '💰', isSaving: true  },
+            emergencia:  { name: 'Emergencias',    pct: 0.05, barClass: 'bg-amber-500',   badgeBg: 'bg-amber-50',   badgeText: 'text-amber-700',   emoji: '🛡️', isSaving: true  },
+            regalos:     { name: 'Ayudas/Regalos', pct: 0.05, barClass: 'bg-rose-500',    badgeBg: 'bg-rose-50',    badgeText: 'text-rose-700',    emoji: '🤝', isSaving: false }
+        };
+
+        // Formateador de moneda seguro
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('es-CO', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount || 0);
+        }
+
+        // Mostrar notificación Toast
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-msg');
+            if (!toast || !msgEl) return;
+            msgEl.textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Cargar estado desde localStorage con manejo de errores
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('hogarBalance_50251555');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    appState = {
+                        incomes: Array.isArray(parsed.incomes) ? parsed.incomes : [],
+                        transactions: Array.isArray(parsed.transactions) ? parsed.transactions : [],
+                        receivables: Array.isArray(parsed.receivables) ? parsed.receivables : [],
+                        payables: Array.isArray(parsed.payables) ? parsed.payables : []
+                    };
+                }
+            } catch (e) {
+                console.warn("No se pudo leer de localStorage:", e);
+            }
+        }
+
+        // Guardar estado localmente y sincronizar en tiempo real con la nube
+        function saveState() {
+            try {
+                localStorage.setItem('hogarBalance_50251555', JSON.stringify(appState));
+            } catch (e) {
+                console.warn("No se pudo guardar en localStorage:", e);
+            }
+            renderUI();
+            if (window.pushStateToCloud) {
+                window.pushStateToCloud(appState);
+            }
+        }
+
+        // --- INGRESOS ---
+        document.getElementById('income-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const source = document.getElementById('income-source').value.trim();
+            const amount = parseFloat(document.getElementById('income-amount').value);
+
+            if (!source || isNaN(amount) || amount <= 0) return;
+
+            appState.incomes.push({
+                id: Date.now(),
+                source,
+                amount
+            });
+
+            document.getElementById('income-source').value = '';
+            document.getElementById('income-amount').value = '';
+            saveState();
+            showToast(`Ingreso "${source}" agregado`);
+        });
+
+        function deleteIncome(id) {
+            appState.incomes = appState.incomes.filter(item => item.id !== id);
+            saveState();
+            showToast('Ingreso eliminado');
+        }
+
+        // --- MOVIMIENTOS ---
+        document.getElementById('expense-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const category = document.getElementById('exp-category').value;
+            const desc = document.getElementById('exp-desc').value.trim();
+            const member = document.getElementById('exp-member').value;
+            const amount = parseFloat(document.getElementById('exp-amount').value);
+
+            if (!desc || isNaN(amount) || amount <= 0) return;
+
+            appState.transactions.unshift({
+                id: Date.now(),
+                category,
+                desc,
+                member,
+                amount,
+                date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
+            });
+
+            document.getElementById('exp-desc').value = '';
+            document.getElementById('exp-amount').value = '';
+            saveState();
+            showToast('Movimiento registrado correctamente');
+        });
+
+        function deleteTransaction(id) {
+            appState.transactions = appState.transactions.filter(t => t.id !== id);
+            saveState();
+            showToast('Movimiento eliminado');
+        }
+
+        // --- CUENTAS POR COBRAR (CxC) ---
+        document.getElementById('receivable-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const person = document.getElementById('rec-person').value.trim();
+            const dueDate = document.getElementById('rec-date').value;
+            const amount = parseFloat(document.getElementById('rec-amount').value);
+
+            if (!person || isNaN(amount) || amount <= 0) return;
+
+            appState.receivables.unshift({
+                id: Date.now(),
+                person,
+                dueDate,
+                amount,
+                paidAmount: 0,
+                collected: false
+            });
+
+            document.getElementById('rec-person').value = '';
+            document.getElementById('rec-date').value = '';
+            document.getElementById('rec-amount').value = '';
+            saveState();
+            showToast('Cuenta por cobrar registrada');
+        });
+
+        function deleteReceivable(id) {
+            appState.receivables = appState.receivables.filter(r => r.id !== id);
+            saveState();
+            showToast('Cuenta por cobrar eliminada');
+        }
+
+        // --- CUENTAS POR PAGAR (CxP) ---
+        document.getElementById('payable-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const desc = document.getElementById('pay-desc').value.trim();
+            const category = document.getElementById('pay-category').value;
+            const dueDate = document.getElementById('pay-date').value;
+            const amount = parseFloat(document.getElementById('pay-amount').value);
+
+            if (!desc || isNaN(amount) || amount <= 0) return;
+
+            appState.payables.unshift({
+                id: Date.now(),
+                desc,
+                category,
+                dueDate,
+                amount,
+                paidAmount: 0,
+                paid: false
+            });
+
+            document.getElementById('pay-desc').value = '';
+            document.getElementById('pay-date').value = '';
+            document.getElementById('pay-amount').value = '';
+            saveState();
+            showToast('Cuenta por pagar programada');
+        });
+
+        function deletePayable(id) {
+            appState.payables = appState.payables.filter(p => p.id !== id);
+            saveState();
+            showToast('Cuenta por pagar eliminada');
+        }
+
+        // --- GESTIÓN DE COBROS Y PAGOS PARCIALES ---
+        let activePartialContext = null;
+
+        function openPartialModal(type, id) {
+            const list = type === 'receivable' ? appState.receivables : appState.payables;
+            const item = list.find(i => i.id === id);
+            if (!item) return;
+
+            const alreadyPaid = item.paidAmount || 0;
+            const remaining = Math.max(item.amount - alreadyPaid, 0);
+            if (remaining <= 0) return;
+
+            activePartialContext = { type, id, remaining };
+
+            const modal = document.getElementById('partial-modal');
+            const titleEl = document.getElementById('partial-modal-title');
+            const subEl = document.getElementById('partial-modal-subtitle');
+            const iconEl = document.getElementById('partial-modal-icon');
+            const submitBtn = document.getElementById('partial-submit-btn');
+            const inputEl = document.getElementById('partial-amount-input');
+            const destWrapper = document.getElementById('partial-destination-wrapper');
+            const destSelect = document.getElementById('partial-destination-select');
+
+            if (type === 'receivable') {
+                titleEl.textContent = `Cobrar a ${item.person}`;
+                iconEl.className = 'w-12 h-12 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center mb-4 text-xl font-bold';
+                iconEl.textContent = '📥';
+                submitBtn.className = 'flex-1 py-2.5 px-4 rounded-xl bg-teal-600 text-white font-semibold text-sm hover:bg-teal-700 transition shadow-sm';
+                destWrapper.classList.remove('hidden');
+                destSelect.value = 'income';
+            } else {
+                titleEl.textContent = `Abonar a ${item.desc}`;
+                iconEl.className = 'w-12 h-12 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center mb-4 text-xl font-bold';
+                iconEl.textContent = '📤';
+                submitBtn.className = 'flex-1 py-2.5 px-4 rounded-xl bg-orange-600 text-white font-semibold text-sm hover:bg-orange-700 transition shadow-sm';
+                destWrapper.classList.add('hidden');
+            }
+
+            subEl.textContent = `Total: ${formatCurrency(item.amount)} • Saldo pendiente: ${formatCurrency(remaining)}`;
+            inputEl.max = remaining;
+            inputEl.value = remaining;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => inputEl.focus(), 50);
+        }
+
+        function fillFullPartialAmount() {
+            if (!activePartialContext) return;
+            document.getElementById('partial-amount-input').value = activePartialContext.remaining;
+        }
+
+        function closePartialModal() {
+            const modal = document.getElementById('partial-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            activePartialContext = null;
+        }
+
+        document.getElementById('partial-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (!activePartialContext) return;
+
+            const amountToApply = parseFloat(document.getElementById('partial-amount-input').value);
+            if (isNaN(amountToApply) || amountToApply <= 0) return;
+
+            const { type, id } = activePartialContext;
+
+            if (type === 'receivable') {
+                const item = appState.receivables.find(r => r.id === id);
+                if (!item) return;
+
+                const currentPaid = item.paidAmount || 0;
+                const remaining = Math.max(item.amount - currentPaid, 0);
+                const applied = Math.min(amountToApply, remaining);
+
+                item.paidAmount = currentPaid + applied;
+                if (item.paidAmount >= item.amount - 0.001) {
+                    item.paidAmount = item.amount;
+                    item.collected = true;
+                }
+
+                const label = item.collected ? `Cobro total: ${item.person}` : `Abono cobrado: ${item.person}`;
+                const destination = document.getElementById('partial-destination-select').value;
+
+                if (destination === 'income') {
+                    appState.incomes.push({
+                        id: Date.now(),
+                        source: label,
+                        amount: applied
+                    });
+                    closePartialModal();
+                    saveState();
+                    showToast(`+${formatCurrency(applied)} sumados a ingresos familiares`);
+                } else {
+                    const isSavingsCat = CATEGORIES[destination] && CATEGORIES[destination].isSaving;
+                    appState.transactions.unshift({
+                        id: Date.now(),
+                        category: destination,
+                        desc: `Reintegro CxC: ${item.person}`,
+                        member: 'Hogar (Común)',
+                        amount: isSavingsCat ? applied : -applied,
+                        date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
+                    });
+                    closePartialModal();
+                    saveState();
+                    showToast(`+${formatCurrency(applied)} reintegrados a ${CATEGORIES[destination].name}`);
+                }
+            } else {
+                const item = appState.payables.find(p => p.id === id);
+                if (!item) return;
+
+                const currentPaid = item.paidAmount || 0;
+                const remaining = Math.max(item.amount - currentPaid, 0);
+                const applied = Math.min(amountToApply, remaining);
+
+                item.paidAmount = currentPaid + applied;
+                if (item.paidAmount >= item.amount - 0.001) {
+                    item.paidAmount = item.amount;
+                    item.paid = true;
+                }
+
+                const label = item.paid ? `Pago total: ${item.desc}` : `Abono parcial: ${item.desc}`;
+                appState.transactions.unshift({
+                    id: Date.now(),
+                    category: item.category,
+                    desc: label,
+                    member: 'Hogar (Común)',
+                    amount: applied,
+                    date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
+                });
+
+                closePartialModal();
+                saveState();
+                showToast(`Abono de ${formatCurrency(applied)} registrado en ${CATEGORIES[item.category].name}`);
+            }
+        });
+
+        // Renderizar gráfico comparativo nativo
+        function updateChart(spentByCat, totalIncome) {
+            const container = document.getElementById('native-chart-container');
+            if (!container) return;
+
+            const maxVal = Math.max(
+                totalIncome * 0.50,
+                ...Object.values(spentByCat),
+                1
+            );
+
+            container.innerHTML = Object.keys(CATEGORIES).map(key => {
+                const cat = CATEGORIES[key];
+                const actual = spentByCat[key] || 0;
+                const ideal = totalIncome * cat.pct;
+                const actualPctWidth = Math.min((actual / maxVal) * 100, 100);
+                const idealPctWidth = Math.min((ideal / maxVal) * 100, 100);
+
+                return `
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-xs">
+                            <span class="font-semibold text-slate-700">${cat.emoji} ${cat.name} (${Math.round(cat.pct * 100)}%)</span>
+                            <span class="text-slate-500"><strong class="text-slate-800">${formatCurrency(actual)}</strong> / ${formatCurrency(ideal)}</span>
+                        </div>
+                        <div class="space-y-1 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+                            <div class="w-full bg-slate-200/50 rounded-full h-2 overflow-hidden">
+                                <div class="${cat.barClass} h-2 rounded-full transition-all duration-500" style="width: ${actualPctWidth}%"></div>
+                            </div>
+                            <div class="w-full bg-transparent rounded-full h-1.5 overflow-hidden">
+                                <div class="bg-slate-300 h-1.5 rounded-full transition-all duration-500" style="width: ${idealPctWidth}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Renderizar toda la interfaz
+        function renderUI() {
+            const totalIncome = appState.incomes.reduce((acc, item) => acc + item.amount, 0);
+            
+            // Calcular totales por categoría
+            const spentByCat = { necesidades: 0, deseos: 0, ahorro: 0, emergencia: 0, regalos: 0 };
+            appState.transactions.forEach(t => {
+                if (spentByCat[t.category] !== undefined) {
+                    spentByCat[t.category] += t.amount;
+                }
+            });
+
+            const totalExecuted = Object.values(spentByCat).reduce((a, b) => a + b, 0);
+            const remaining = totalIncome - totalExecuted;
+
+            // Actualizar cabecera de ingresos
+            document.getElementById('total-income-display').textContent = formatCurrency(totalIncome);
+            const remEl = document.getElementById('remaining-balance-display');
+            remEl.textContent = formatCurrency(remaining);
+            remEl.className = remaining < 0 ? 'text-rose-600 font-bold' : 'text-emerald-600 font-bold';
+
+            // Renderizar píldoras de ingresos
+            const pillsContainer = document.getElementById('income-pills');
+            if (appState.incomes.length > 0) {
+                pillsContainer.classList.remove('hidden');
+                pillsContainer.innerHTML = appState.incomes.map(inc => `
+                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 text-xs font-medium text-slate-700">
+                        <span>${inc.source}: <strong>${formatCurrency(inc.amount)}</strong></span>
+                        <button type="button" onclick="deleteIncome(${inc.id})" class="text-slate-400 hover:text-rose-600 transition font-bold" title="Eliminar ingreso">
+                            ✕
+                        </button>
+                    </span>
+                `).join('');
+            } else {
+                pillsContainer.classList.add('hidden');
+            }
+
+            // Actualizar las 5 tarjetas del método 50-25-15-5-5
+            Object.keys(CATEGORIES).forEach(key => {
+                const cat = CATEGORIES[key];
+                const budget = totalIncome * cat.pct;
+                const spent = spentByCat[key];
+                const realPctOfIncome = totalIncome > 0 ? Math.round((spent / totalIncome) * 100) : 0;
+                const progressPct = budget > 0 ? Math.min((spent / budget) * 100, 100) : (spent > 0 ? 100 : 0);
+
+                document.getElementById(`budget-${key}`).textContent = formatCurrency(budget);
+                document.getElementById(`spent-${key}`).textContent = formatCurrency(spent);
+                document.getElementById(`pct-${key}`).textContent = `${realPctOfIncome}%`;
+                
+                const barEl = document.getElementById(`bar-${key}`);
+                const statusEl = document.getElementById(`status-${key}`);
+                barEl.style.width = `${progressPct}%`;
+
+                if (totalIncome === 0 && spent === 0) {
+                    statusEl.textContent = 'Agrega ingresos para calcular';
+                    statusEl.className = 'text-[11px] font-medium text-slate-400 text-right';
+                } else if (!cat.isSaving) {
+                    const diff = budget - spent;
+                    if (diff < 0) {
+                        barEl.className = 'bg-rose-500 h-2.5 rounded-full transition-all duration-500';
+                        statusEl.textContent = `Excedido por ${formatCurrency(Math.abs(diff))}`;
+                        statusEl.className = 'text-[11px] font-bold text-rose-600 text-right';
+                    } else {
+                        barEl.className = `${cat.barClass} h-2.5 rounded-full transition-all duration-500`;
+                        statusEl.textContent = `Disponible: ${formatCurrency(diff)}`;
+                        statusEl.className = 'text-[11px] font-medium text-slate-500 text-right';
+                    }
+                } else {
+                    const diff = budget - spent;
+                    if (spent >= budget && budget > 0) {
+                        statusEl.textContent = '¡Meta mensual cumplida!';
+                        statusEl.className = 'text-[11px] font-bold text-emerald-600 text-right';
+                    } else {
+                        statusEl.textContent = `Faltan ${formatCurrency(Math.max(diff, 0))} para meta`;
+                        statusEl.className = 'text-[11px] font-medium text-slate-500 text-right';
+                    }
+                }
+            });
+
+            // Renderizar Cuentas por Cobrar (CxC)
+            const pendingRecTotal = appState.receivables
+                .filter(r => !r.collected)
+                .reduce((sum, r) => sum + Math.max(r.amount - (r.paidAmount || 0), 0), 0);
+            document.getElementById('total-receivable').textContent = formatCurrency(pendingRecTotal);
+            const recListEl = document.getElementById('receivables-list');
+
+            if (appState.receivables.length === 0) {
+                recListEl.innerHTML = `<p class="text-xs text-slate-400 text-center py-6 border border-dashed border-slate-200 rounded-2xl">No tienes cuentas por cobrar pendientes.</p>`;
+            } else {
+                recListEl.innerHTML = appState.receivables.map(rec => {
+                    const paidAmt = rec.paidAmount || (rec.collected ? rec.amount : 0);
+                    const remainingAmt = Math.max(rec.amount - paidAmt, 0);
+                    const pctPaid = rec.amount > 0 ? Math.min((paidAmt / rec.amount) * 100, 100) : 0;
+
+                    return `
+                    <div class="p-3 rounded-2xl border ${rec.collected ? 'bg-slate-50/60 border-slate-100 opacity-65' : 'bg-teal-50/30 border-teal-100'} space-y-2">
+                        <div class="flex items-center justify-between">
+                            <div class="min-w-0 pr-2">
+                                <p class="text-xs font-bold text-slate-800 truncate ${rec.collected ? 'line-through' : ''}">${rec.person}</p>
+                                <span class="text-[11px] text-slate-500">
+                                    ${rec.dueDate ? 'Fecha: ' + rec.dueDate : 'Sin fecha'}
+                                    ${paidAmt > 0 && !rec.collected ? ` • Cobrado: <strong class="text-teal-700">${formatCurrency(paidAmt)}</strong> de ${formatCurrency(rec.amount)}` : ''}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <div class="text-right">
+                                    <span class="block text-xs font-bold text-teal-700">${formatCurrency(rec.collected ? rec.amount : remainingAmt)}</span>
+                                    ${paidAmt > 0 && !rec.collected ? '<span class="block text-[9px] text-slate-400 uppercase font-semibold">Saldo</span>' : ''}
+                                </div>
+                                ${!rec.collected 
+                                    ? `<button type="button" onclick="openPartialModal('receivable', ${rec.id})" class="px-2.5 py-1 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-semibold rounded-lg transition" title="Registrar cobro parcial o total">Cobrar</button>`
+                                    : `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-md">Cobrado</span>`
+                                }
+                                <button type="button" onclick="deleteReceivable(${rec.id})" class="p-1 text-slate-400 hover:text-rose-600 transition font-bold" title="Eliminar">✕</button>
+                            </div>
+                        </div>
+                        ${paidAmt > 0 && !rec.collected ? `
+                            <div class="w-full bg-teal-100 rounded-full h-1.5 overflow-hidden">
+                                <div class="bg-teal-500 h-1.5 rounded-full transition-all duration-300" style="width: ${pctPaid}%"></div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                }).join('');
+            }
+
+            // Renderizar Cuentas por Pagar (CxP)
+            const pendingPayTotal = appState.payables
+                .filter(p => !p.paid)
+                .reduce((sum, p) => sum + Math.max(p.amount - (p.paidAmount || 0), 0), 0);
+            document.getElementById('total-payable').textContent = formatCurrency(pendingPayTotal);
+            const payListEl = document.getElementById('payables-list');
+
+            if (appState.payables.length === 0) {
+                payListEl.innerHTML = `<p class="text-xs text-slate-400 text-center py-6 border border-dashed border-slate-200 rounded-2xl">No tienes cuentas por pagar programadas.</p>`;
+            } else {
+                payListEl.innerHTML = appState.payables.map(pay => {
+                    const cat = CATEGORIES[pay.category] || CATEGORIES.necesidades;
+                    const paidAmt = pay.paidAmount || (pay.paid ? pay.amount : 0);
+                    const remainingAmt = Math.max(pay.amount - paidAmt, 0);
+                    const pctPaid = pay.amount > 0 ? Math.min((paidAmt / pay.amount) * 100, 100) : 0;
+
+                    return `
+                        <div class="p-3 rounded-2xl border ${pay.paid ? 'bg-slate-50/60 border-slate-100 opacity-65' : 'bg-orange-50/30 border-orange-100'} space-y-2">
+                            <div class="flex items-center justify-between">
+                                <div class="min-w-0 pr-2">
+                                    <p class="text-xs font-bold text-slate-800 truncate ${pay.paid ? 'line-through' : ''}">${pay.desc}</p>
+                                    <div class="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500 mt-0.5">
+                                        <span class="font-semibold ${cat.badgeText}">${cat.name}</span>
+                                        <span>•</span>
+                                        <span>${pay.dueDate ? 'Vence: ' + pay.dueDate : 'Sin fecha'}</span>
+                                        ${paidAmt > 0 && !pay.paid ? `<span>• Abonado: <strong class="text-orange-700">${formatCurrency(paidAmt)}</strong>/${formatCurrency(pay.amount)}</span>` : ''}
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <div class="text-right">
+                                        <span class="block text-xs font-bold text-orange-700">${formatCurrency(pay.paid ? pay.amount : remainingAmt)}</span>
+                                        ${paidAmt > 0 && !pay.paid ? '<span class="block text-[9px] text-slate-400 uppercase font-semibold">Saldo</span>' : ''}
+                                    </div>
+                                    ${!pay.paid 
+                                        ? `<button type="button" onclick="openPartialModal('payable', ${pay.id})" class="px-2.5 py-1 bg-orange-600 hover:bg-orange-700 text-white text-[11px] font-semibold rounded-lg transition" title="Registrar abono parcial o pago total">Pagar</button>`
+                                        : `<span class="px-2 py-0.5 bg-slate-200 text-slate-700 text-[10px] font-bold rounded-md">Pagado</span>`
+                                    }
+                                    <button type="button" onclick="deletePayable(${pay.id})" class="p-1 text-slate-400 hover:text-rose-600 transition font-bold" title="Eliminar">✕</button>
+                                </div>
+                            </div>
+                            ${paidAmt > 0 && !pay.paid ? `
+                                <div class="w-full bg-orange-100 rounded-full h-1.5 overflow-hidden">
+                                    <div class="bg-orange-500 h-1.5 rounded-full transition-all duration-300" style="width: ${pctPaid}%"></div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Renderizar historial de transacciones
+            const filter = document.getElementById('filter-category').value;
+            const listEl = document.getElementById('transactions-list');
+            const filteredTx = filter === 'all' 
+                ? appState.transactions 
+                : appState.transactions.filter(t => t.category === filter);
+
+            if (filteredTx.length === 0) {
+                listEl.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-center py-12 px-4 border-2 border-dashed border-slate-200 rounded-2xl">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-3 text-xl">
+                            📋
+                        </div>
+                        <p class="text-sm font-semibold text-slate-700">No hay movimientos registrados</p>
+                        <p class="text-xs text-slate-400 mt-1 max-w-xs">Agrega tus ingresos arriba y registra los gastos o ahorros de la familia.</p>
+                    </div>
+                `;
+            } else {
+                listEl.innerHTML = filteredTx.map(tx => {
+                    const cat = CATEGORIES[tx.category] || CATEGORIES.necesidades;
+                    return `
+                        <div class="flex items-center justify-between p-3.5 rounded-2xl border border-slate-100 hover:border-slate-200 bg-slate-50/50 hover:bg-white transition group">
+                            <div class="flex items-center gap-3.5 min-w-0">
+                                <div class="w-10 h-10 rounded-xl ${cat.badgeBg} ${cat.badgeText} flex items-center justify-center shrink-0 text-base">
+                                    ${cat.emoji}
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-bold text-slate-800 truncate">${tx.desc}</p>
+                                    <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                                        <span class="font-medium ${cat.badgeText}">${cat.name}</span>
+                                        <span>•</span>
+                                        <span>${tx.member}</span>
+                                        <span>•</span>
+                                        <span>${tx.date}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 shrink-0 ml-2">
+                                <span class="font-bold text-sm ${tx.amount < 0 ? 'text-teal-600' : 'text-slate-900'}">${tx.amount < 0 ? '+' + formatCurrency(Math.abs(tx.amount)) : formatCurrency(tx.amount)}</span>
+                                <button type="button" onclick="deleteTransaction(${tx.id})" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition font-bold text-xs" title="Eliminar movimiento">
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Actualizar gráfico comparativo
+            updateChart(spentByCat, totalIncome);
+        }
+
+        // Modal de Reinicio
+        function openConfirmModal() {
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function confirmReset() {
+            appState = { incomes: [], transactions: [], receivables: [], payables: [] };
+            saveState();
+            closeConfirmModal();
+            showToast('Presupuesto reiniciado desde cero');
+        }
+
+        // Cargar datos de ejemplo
+        function loadDemoData() {
+            appState = {
+                incomes: [
+                    { id: 1, source: 'Salario Papá', amount: 2800 },
+                    { id: 2, source: 'Salario Mamá', amount: 2200 }
+                ],
+                transactions: [
+                    { id: 101, category: 'necesidades', desc: 'Arriendo / Hipoteca', member: 'Hogar (Común)', amount: 1400, date: '01 Nov' },
+                    { id: 102, category: 'necesidades', desc: 'Mercado quincenal', member: 'Mamá', amount: 550, date: '05 Nov' },
+                    { id: 103, category: 'necesidades', desc: 'Servicios y Colegios', member: 'Papá', amount: 450, date: '10 Nov' },
+                    { id: 104, category: 'deseos', desc: 'Cena familiar fin de semana', member: 'Hogar (Común)', amount: 180, date: '12 Nov' },
+                    { id: 105, category: 'deseos', desc: 'Cine y helados', member: 'Hijos', amount: 95, date: '15 Nov' },
+                    { id: 106, category: 'ahorro', desc: 'Aporte Fondo Educación / Inversión', member: 'Hogar (Común)', amount: 750, date: '16 Nov' },
+                    { id: 107, category: 'emergencia', desc: 'Transferencia cuenta respaldo', member: 'Hogar (Común)', amount: 250, date: '18 Nov' },
+                    { id: 108, category: 'regalos', desc: 'Ayuda familiar y regalo abuela', member: 'Hogar (Común)', amount: 180, date: '19 Nov' }
+                ],
+                receivables: [
+                    { id: 201, person: 'Préstamo Tío Carlos', dueDate: '2026-11-30', amount: 300, paidAmount: 100, collected: false },
+                    { id: 202, person: 'Reembolso gastos médicos', dueDate: '2026-11-25', amount: 120, paidAmount: 0, collected: false }
+                ],
+                payables: [
+                    { id: 301, desc: 'Factura Energía e Internet', category: 'necesidades', dueDate: '2026-11-24', amount: 110, paidAmount: 0, paid: false },
+                    { id: 302, desc: 'Cuota regalo Navidad', category: 'regalos', dueDate: '2026-11-28', amount: 120, paidAmount: 60, paid: false }
+                ]
+            };
+            saveState();
+            showToast('Datos de demostración cargados');
+        }
+
+        // --- FUNCIONES DE APP INSTALABLE (PWA) Y RESPALDO ---
+        let deferredInstallPrompt = null;
+
+        function setupPWA() {
+            try {
+                // Generar icono SVG incrustado para pantalla de inicio
+                const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#059669"/><text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-size="260">🏠</text></svg>`;
+                const iconUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgIcon);
+                
+                const appleIconEl = document.getElementById('pwa-apple-icon');
+                if (appleIconEl) appleIconEl.href = iconUrl;
+
+                // Generar Manifiesto PWA dinámico
+                const manifest = {
+                    name: 'HogarBalance - Finanzas Familiares',
+                    short_name: 'HogarBalance',
+                    description: 'Presupuesto familiar método 50-25-15-5-5',
+                    start_url: window.location.href,
+                    display: 'standalone',
+                    background_color: '#f8fafc',
+                    theme_color: '#059669',
+                    icons: [
+                        { src: iconUrl, sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
+                        { src: iconUrl, sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
+                    ]
+                };
+
+                const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+                const manifestEl = document.getElementById('pwa-manifest');
+                if (manifestEl) manifestEl.href = URL.createObjectURL(manifestBlob);
+
+                // Registrar Service Worker para uso sin conexión si el protocolo lo permite
+                if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.protocol === 'http:')) {
+                    const swCode = `
+                        const CACHE_NAME = 'hogarbalance-v1';
+                        self.addEventListener('install', e => self.skipWaiting());
+                        self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+                        self.addEventListener('fetch', e => {
+                            e.respondWith(
+                                fetch(e.request).then(res => {
+                                    const copy = res.clone();
+                                    caches.open(CACHE_NAME).then(c => c.put(e.request, copy));
+                                    return res;
+                                }).catch(() => caches.match(e.request))
+                            );
+                        });
+                    `;
+                    const swBlob = new Blob([swCode], { type: 'application/javascript' });
+                    navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+                }
+            } catch (err) {
+                console.warn('PWA setup omitido:', err);
+            }
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            const nativeBox = document.getElementById('install-native-box');
+            if (nativeBox) nativeBox.classList.remove('hidden');
+        });
+
+        async function triggerNativeInstall() {
+            if (!deferredInstallPrompt) return;
+            deferredInstallPrompt.prompt();
+            const { outcome } = await deferredInstallPrompt.userChoice;
+            if (outcome === 'accepted') {
+                showToast('¡Instalando HogarBalance en tu dispositivo!');
+                closeInstallModal();
+            }
+            deferredInstallPrompt = null;
+        }
+
+        function openInstallModal() {
+            const modal = document.getElementById('install-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeInstallModal() {
+            const modal = document.getElementById('install-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function downloadStandaloneHTML() {
+            const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'HogarBalance-App.html';
+            link.click();
+            showToast('Archivo HogarBalance-App.html descargado');
+        }
+
+        function exportBackup() {
+            const dataStr = JSON.stringify(appState, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const link = document.createElement('a');
+            const dateTag = new Date().toISOString().slice(0, 10);
+            link.href = URL.createObjectURL(blob);
+            link.download = `respaldo-hogarbalance-${dateTag}.json`;
+            link.click();
+            showToast('Copia de seguridad descargada');
+        }
+
+        function importBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed && Array.isArray(parsed.incomes) && Array.isArray(parsed.transactions)) {
+                        appState = {
+                            incomes: parsed.incomes,
+                            transactions: parsed.transactions,
+                            receivables: Array.isArray(parsed.receivables) ? parsed.receivables : [],
+                            payables: Array.isArray(parsed.payables) ? parsed.payables : []
+                        };
+                        saveState();
+                        showToast('Datos restaurados correctamente');
+                    } else {
+                        showToast('El archivo no tiene un formato válido');
+                    }
+                } catch (err) {
+                    showToast('Error al leer el archivo de respaldo');
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        // Inicialización segura
+        window.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            setupPWA();
+            renderUI();
+        });
+    </script>
+
+    <!-- Módulo de Sincronización en Tiempo Real en la Nube -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+        let unsubscribeSnapshot = null;
+        let isApplyingRemoteUpdate = false;
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // Obtener o generar código de hogar compartido en memoria de sesión / URL
+        function getInitialHouseholdCode() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const fromUrl = urlParams.get('hogar');
+            if (fromUrl && fromUrl.trim()) {
+                return fromUrl.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
+            }
+            if (window.name && window.name.startsWith('HB_CODE:')) {
+                return window.name.replace('HB_CODE:', '');
+            }
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            const generated = `HOGAR-${randomNum}`;
+            window.name = `HB_CODE:${generated}`;
+            return generated;
+        }
+
+        let householdCode = getInitialHouseholdCode();
+
+        function updateSyncStatusUI(connected, labelText) {
+            const dot = document.getElementById('sync-dot');
+            const btnLabel = document.getElementById('sync-btn-label');
+            const statusText = document.getElementById('sync-status-text');
+            const codeInput = document.getElementById('current-household-code');
+
+            if (codeInput) codeInput.value = householdCode;
+            if (btnLabel) btnLabel.textContent = householdCode;
+
+            if (connected) {
+                if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block';
+                if (statusText) {
+                    statusText.textContent = labelText || `● Conectado en vivo (${householdCode})`;
+                    statusText.className = 'text-xs font-semibold text-emerald-600';
+                }
+            } else {
+                if (dot) dot.className = 'w-2 h-2 rounded-full bg-amber-400 inline-block';
+                if (statusText) {
+                    statusText.textContent = labelText || 'Modo sin conexión (guardando en sesión)';
+                    statusText.className = 'text-xs font-medium text-amber-600';
+                }
+            }
+        }
+
+        // Guardar cambios hacia la nube
+        window.pushStateToCloud = async function(stateToSave) {
+            if (!db || !currentUser || isApplyingRemoteUpdate) return;
+            try {
+                const householdRef = doc(db, 'artifacts', appId, 'public', 'data', 'households', householdCode);
+                await setDoc(householdRef, {
+                    incomes: stateToSave.incomes || [],
+                    transactions: stateToSave.transactions || [],
+                    receivables: stateToSave.receivables || [],
+                    payables: stateToSave.payables || [],
+                    updatedAt: Date.now(),
+                    updatedBy: currentUser.uid
+                }, { merge: true });
+            } catch (err) {
+                console.error('Error sincronizando hacia la nube:', err);
+            }
+        };
+
+        // Escuchar cambios en tiempo real del hogar
+        function subscribeToHousehold(code) {
+            if (!db || !currentUser) return;
+            if (unsubscribeSnapshot) {
+                unsubscribeSnapshot();
+                unsubscribeSnapshot = null;
+            }
+
+            householdCode = code;
+            window.name = `HB_CODE:${householdCode}`;
+            updateSyncStatusUI(true, `● Conectando a ${householdCode}...`);
+
+            const householdRef = doc(db, 'artifacts', appId, 'public', 'data', 'households', householdCode);
+
+            unsubscribeSnapshot = onSnapshot(
+                householdRef,
+                (snapshot) => {
+                    updateSyncStatusUI(true, `● Sincronizado en vivo (${householdCode})`);
+                    if (snapshot.exists()) {
+                        const data = snapshot.data();
+                        isApplyingRemoteUpdate = true;
+                        appState = {
+                            incomes: Array.isArray(data.incomes) ? data.incomes : [],
+                            transactions: Array.isArray(data.transactions) ? data.transactions : [],
+                            receivables: Array.isArray(data.receivables) ? data.receivables : [],
+                            payables: Array.isArray(data.payables) ? data.payables : []
+                        };
+                        renderUI();
+                        isApplyingRemoteUpdate = false;
+                    } else {
+                        // Si el hogar aún no existe en la nube y ya hay datos locales en pantalla, subirlos
+                        const hasLocalData = appState.incomes.length > 0 || appState.transactions.length > 0 || appState.receivables.length > 0 || appState.payables.length > 0;
+                        if (hasLocalData) {
+                            window.pushStateToCloud(appState);
+                        }
+                    }
+                },
+                (error) => {
+                    console.error('Error en suscripción en tiempo real:', error);
+                    updateSyncStatusUI(false, 'Error de conexión con la nube');
+                }
+            );
+        }
+
+        // Funciones globales del modal de sincronización
+        window.openSyncModal = function() {
+            const modal = document.getElementById('sync-modal');
+            const codeInput = document.getElementById('current-household-code');
+            if (codeInput) codeInput.value = householdCode;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.closeSyncModal = function() {
+            const modal = document.getElementById('sync-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        window.copyHouseholdCode = function() {
+            const input = document.getElementById('current-household-code');
+            if (!input) return;
+            input.select();
+            input.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                showToast(`Código ${householdCode} copiado al portapapeles`);
+            } catch (e) {
+                showToast('Selecciona y copia el código manualmente');
+            }
+        };
+
+        window.createNewHouseholdCode = function() {
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            const newCode = `HOGAR-${randomNum}`;
+            subscribeToHousehold(newCode);
+            showToast(`Nuevo hogar creado: ${newCode}`);
+        };
+
+        document.getElementById('join-household-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const rawCode = document.getElementById('join-household-input').value.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
+            if (!rawCode) return;
+            document.getElementById('join-household-input').value = '';
+            subscribeToHousehold(rawCode);
+            closeSyncModal();
+            showToast(`Conectado al hogar ${rawCode}`);
+        });
+
+        // Inicializar conexión en la nube
+        async function initCloudSync() {
+            try {
+                if (typeof __firebase_config === 'undefined') {
+                    updateSyncStatusUI(false, 'Configuración de nube no disponible');
+                    return;
+                }
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                currentUser = auth.currentUser;
+                if (!currentUser) return;
+
+                const uidLabel = document.getElementById('device-uid-label');
+                if (uidLabel) uidLabel.textContent = currentUser.uid;
+
+                subscribeToHousehold(householdCode);
+            } catch (err) {
+                console.error('Fallo al iniciar sincronización:', err);
+                updateSyncStatusUI(false, 'Sin conexión a la nube');
+            }
+        }
+
+        initCloudSync();
+    </script>
+</body>
+</html>
