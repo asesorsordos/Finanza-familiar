@@ -627,28 +627,43 @@
             regalos:     { name: 'Ayudas/Regalos', pct: 0.05, barClass: 'bg-rose-500',    badgeBg: 'bg-rose-50',    badgeText: 'text-rose-700',    emoji: '🤝', isSaving: false }
         };
 
-        // Formateador de moneda seguro
+        // Formateador de moneda seguro en Pesos Colombianos (COP)
         function formatCurrency(amount) {
             return new Intl.NumberFormat('es-CO', {
                 style: 'currency',
-                currency: 'USD',
+                currency: 'COP',
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0
             }).format(amount || 0);
         }
-
-        // Mostrar notificación Toast
-        let toastTimeout;
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            const msgEl = document.getElementById('toast-msg');
-            if (!toast || !msgEl) return;
-            msgEl.textContent = message;
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
+        // Cargar datos de ejemplo en Pesos Colombianos (COP)
+        function loadDemoData() {
+            appState = {
+                incomes: [
+                    { id: 1, source: 'Salario Papá', amount: 3500000 },
+                    { id: 2, source: 'Salario Mamá', amount: 2500000 }
+                ],
+                transactions: [
+                    { id: 101, category: 'necesidades', desc: 'Arriendo / Hipoteca', member: 'Hogar (Común)', amount: 1500000, date: '01 Nov' },
+                    { id: 102, category: 'necesidades', desc: 'Mercado quincenal', member: 'Mamá', amount: 750000, date: '05 Nov' },
+                    { id: 103, category: 'necesidades', desc: 'Servicios públicos e internet', member: 'Papá', amount: 420000, date: '10 Nov' },
+                    { id: 104, category: 'deseos', desc: 'Almuerzo familiar domingo', member: 'Hogar (Común)', amount: 180000, date: '12 Nov' },
+                    { id: 105, category: 'deseos', desc: 'Cine y helados', member: 'Hijos', amount: 110000, date: '15 Nov' },
+                    { id: 106, category: 'ahorro', desc: 'Aporte Fondo Vivienda / CDT', member: 'Hogar (Común)', amount: 900000, date: '16 Nov' },
+                    { id: 107, category: 'emergencia', desc: 'Transferencia cuenta respaldo', member: 'Hogar (Común)', amount: 300000, date: '18 Nov' },
+                    { id: 108, category: 'regalos', desc: 'Ayuda familiar y regalo abuela', member: 'Hogar (Común)', amount: 220000, date: '19 Nov' }
+                ],
+                receivables: [
+                    { id: 201, person: 'Préstamo Tío Carlos', dueDate: '2026-11-30', amount: 400000, paidAmount: 150000, collected: false },
+                    { id: 202, person: 'Reembolso gastos médicos', dueDate: '2026-11-25', amount: 180000, paidAmount: 0, collected: false }
+                ],
+                payables: [
+                    { id: 301, desc: 'Factura Energía EPM / Enel', category: 'necesidades', dueDate: '2026-11-24', amount: 165000, paidAmount: 0, paid: false },
+                    { id: 302, desc: 'Cuota regalo Navidad', category: 'regalos', dueDate: '2026-11-28', amount: 150000, paidAmount: 75000, paid: false }
+                ]
+            };
+            saveState();
+            showToast('Datos de demostración en COP cargados');
         }
 
         // Cargar estado desde localStorage con manejo de errores
